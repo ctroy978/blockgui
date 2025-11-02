@@ -41,6 +41,88 @@ blocks:
         long: --unknown-label
         default: "Unknown Student"
         takes_value: true
+  - id: evaluation_stage3
+    title: "Stage 3 – Evaluation"
+    command: "python evaluate/evaluate_tests.py"
+    input: jsonl
+    output: jsonl
+    color: orange
+    flags:
+      - key: input
+        label: "Input source"
+        long: --input
+        short: -i
+        placeholder: "PATH or -"
+        default: ""
+        takes_value: true
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
+        takes_value: true
+      - key: material
+        label: "Material"
+        long: --material
+        placeholder: "STRING or PATH"
+        default: ""
+        takes_value: true
+      - key: material-file
+        label: "Material file"
+        long: --material-file
+        placeholder: "PATH"
+        default: ""
+        takes_value: true
+      - key: question
+        label: "Question"
+        long: --question
+        placeholder: "STRING or PATH"
+        default: ""
+        takes_value: true
+      - key: question-file
+        label: "Question file"
+        long: --question-file
+        placeholder: "PATH"
+        default: ""
+        takes_value: true
+      - key: context
+        label: "Context"
+        long: --context
+        placeholder: "STRING or PATH"
+        default: ""
+        takes_value: true
+      - key: context-file
+        label: "Context file"
+        long: --context-file
+        placeholder: "PATH"
+        default: ""
+        takes_value: true
+      - key: model
+        label: "Model"
+        long: --model
+        default: "grok-4-fast-reasoning"
+        takes_value: true
+      - key: max-batch-tokens
+        label: "Max batch tokens"
+        long: --max-batch-tokens
+        default: "12000"
+        takes_value: true
+      - key: max-batch-size
+        label: "Max batch size"
+        long: --max-batch-size
+        default: "5"
+        takes_value: true
+      - key: timeout
+        label: "Timeout (seconds)"
+        long: --timeout
+        default: "180"
+        takes_value: true
+      - key: usage-metadata
+        label: "Include usage metadata"
+        long: --usage-metadata
+        takes_value: false
+        default: false
   - id: cleanup_stage2
     title: "Stage 2 – Cleanup"
     command: "python cleanocr/cleanup_tests.py"
@@ -72,3 +154,131 @@ blocks:
         long: --keep-original
         takes_value: false
         default: false
+  - id: reporting_stage4
+    title: "Stage 4 – Reporting"
+    command: "python report/report_results.py"
+    input: jsonl
+    output: jsonl
+    color: red
+    flags:
+      - key: input
+        label: "Input source"
+        long: --input
+        short: -i
+        placeholder: "PATH or -"
+        default: ""
+        takes_value: true
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
+        takes_value: true
+      - key: csv
+        label: "CSV output"
+        long: --csv
+        placeholder: "PATH"
+        default: ""
+        takes_value: true
+      - key: pdf-dir
+        label: "PDF directory"
+        long: --pdf-dir
+        placeholder: "DIRECTORY"
+        default: ""
+        takes_value: true
+      - key: grade-max
+        label: "Grade max"
+        long: --grade-max
+        default: "10"
+        takes_value: true
+      - key: no-pass-through
+        label: "Disable JSON passthrough"
+        long: --no-pass-through
+        takes_value: false
+        default: false
+  - id: mail_payloads_stage5
+    title: "Stage 5 – Mail Payloads"
+    command: "python mailroom/mailroom_cli.py"
+    input: jsonl
+    output: jsonl
+    color: blue
+    flags:
+      - key: input
+        label: "Input source"
+        long: --input
+        short: -i
+        placeholder: "PATH or -"
+        default: ""
+        takes_value: true
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
+        takes_value: true
+      - key: roster
+        label: "Roster CSV"
+        long: --roster
+        placeholder: "PATH"
+        default: ""
+        takes_value: true
+      - key: subject
+        label: "Email subject"
+        long: --subject
+        default: "Your Evaluation from Mr. Cooper's AI Krew"
+        takes_value: true
+      - key: greeting
+        label: "Greeting prefix"
+        long: --greeting
+        default: "Hello"
+        takes_value: true
+      - key: report
+        label: "Summary report"
+        long: --report
+        placeholder: "PATH"
+        default: ""
+        takes_value: true
+  - id: smtp_send_stage6
+    title: "Stage 6 – SMTP Send"
+    command: "python mailroom/send_mail.py"
+    input: jsonl
+    output: jsonl
+    color: gray
+    flags:
+      - key: input
+        label: "Input source"
+        long: --input
+        short: -i
+        placeholder: "PATH or -"
+        default: ""
+        takes_value: true
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
+        takes_value: true
+      - key: dry-run
+        label: "Dry run"
+        long: --dry-run
+        takes_value: false
+        default: false
+      - key: rate-limit
+        label: "Rate limit"
+        long: --rate-limit
+        default: "0.5"
+        takes_value: true
+      - key: attach-report
+        label: "Attach report PDF"
+        long: --attach-report
+        takes_value: false
+        default: false
+      - key: report
+        label: "Send summary report"
+        long: --report
+        placeholder: "PATH"
+        default: ""
+        takes_value: true

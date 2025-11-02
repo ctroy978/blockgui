@@ -74,6 +74,7 @@ blocks:
         long: --keep-original
         takes_value: false
         default: false
+  # Additional blocks (Stage 3 Evaluation, Stage 4 Reporting, Stage 5 Mail Payloads, Stage 6 SMTP Send) are also defined.
 ```
 
 - `id`: Internal identifier used when pre-linking blocks.

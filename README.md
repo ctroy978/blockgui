@@ -26,6 +26,7 @@ python workflow_editor.py
 The main window displays:
 
 - An **Execute** button (top-left) that generates the pipeline and calls `chained_app.py`.
+- An `edsuite path` field (defaults to `../edsuite`) pointing at the real workflow repository.
 - **Connect Selected** / **Disconnect Selected** controls to manage links between highlighted blocks.
 - A **palette** of template blocks loaded from `blocks.yaml`.
 - A **canvas** area where draggable block instances can be placed, snapped, and connected.
@@ -96,7 +97,7 @@ Add new blocks by appending an object to the `blocks` list. They automatically a
 2. Drag a template block from the palette onto the canvas.
 3. Tick a flag’s checkbox to activate it, then adjust the value if applicable.
 4. Connect blocks by either snapping their ports together (drag until within ~20 px) or selecting two blocks and clicking **Connect Selected**; use **Disconnect Selected** or the Delete key to break links.
-5. Click **Execute**. The terminal prints the pipeline and `chained_app.py` echoes the received command.
+5. Verify the `edsuite path` points at the correct project root, then click **Execute**. The terminal prints the pipeline and executes it inside the edsuite virtualenv (so you'll see the original CLI logs).
 6. Select any canvas block or connection line and press `Delete` (or `Backspace`) to remove it if you cloned one by mistake.
 
 ## Code Structure
@@ -115,4 +116,4 @@ Add new blocks by appending an object to the `blocks` list. They automatically a
 - Blocks expand vertically to fit their flag controls while keeping a minimum 240×110 footprint.
 - Every flag starts disabled; the user ticks a checkbox to include it (value-taking flags keep their suggested defaults until enabled).
 - Connection validation is not enforced in Phase 1; any blocks can be linked. Only one inbound/outbound connection per block is allowed to keep the pipeline linear.
-- `Execute` uses the `python` executable on `PATH`. If you need a different interpreter, adjust `subprocess.run` in `workflow_editor.py`.
+- `Execute` prepends the edsuite virtualenv (`<edsuite>/.venv`) to `PATH` and runs the generated pipeline from that directory, so the CLI behaves just like it would in the original project.

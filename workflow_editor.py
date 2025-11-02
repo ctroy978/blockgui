@@ -11,6 +11,8 @@ and forwards it to chained_app.py for demonstration purposes.
 from __future__ import annotations
 
 import math
+import os
+import shlex
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -33,6 +35,7 @@ from PySide6.QtWidgets import (
     QGraphicsView,
     QLineEdit,
     QMainWindow,
+    QLabel,
     QPushButton,
 )
 
@@ -373,7 +376,10 @@ class CanvasBlock(QGraphicsRectItem):
                     continue
                 value = value_edit.text().strip()
                 if value:
-                    args.append(f"{option} {value}")
+                    expanded_value = os.path.expanduser(value)
+                    # Expand user home before quoting so paths like ~/file resolve correctly.
+                    quoted_value = shlex.quote(expanded_value)
+                    args.append(f"{option} {quoted_value}")
             else:
                 args.append(option)
         return args
@@ -476,6 +482,7 @@ class WorkflowEditor(QMainWindow):
         super().__init__()
         self.definitions = definitions
         self.yaml_path = yaml_path
+        self.base_dir = yaml_path.parent.resolve()
 
         self.scene = QGraphicsScene(self)
         self.scene.setSceneRect(0.0, 0.0, 1600.0, 1200.0)
@@ -496,79 +503,61 @@ class WorkflowEditor(QMainWindow):
     # ------------------------
     def _install_execute_button(self) -> None:
         """Add the Execute button to the scene."""
+        self.edsuite_label = QLabel("edsuite path:")
+        label_proxy = self.scene.addWidget(self.edsuite_label)
+        label_proxy.setPos(10.0, 10.0)
+
+        self.edsuite_path_edit = QLineEdit("../edsuite")
+        self.edsuite_path_edit.setFixedWidth(280)
+        path_proxy = self.scene.addWidget(self.edsuite_path_edit)
+        path_proxy.setPos(110.0, 8.0)
+
         self.execute_button = QPushButton("Execute")
         proxy = self.scene.addWidget(self.execute_button)
-        proxy.setPos(10.0, 10.0)
+        proxy.setPos(10.0, 40.0)
         self.execute_button.clicked.connect(self.execute_workflow)  # type: ignore[arg-type]
 
         self.connect_button = QPushButton("Connect Selected")
         connect_proxy = self.scene.addWidget(self.connect_button)
-        connect_proxy.setPos(110.0, 10.0)
+        connect_proxy.setPos(110.0, 40.0)
         self.connect_button.clicked.connect(self.connect_selected_blocks)  # type: ignore[arg-type]
 
         self.disconnect_button = QPushButton("Disconnect Selected")
         disconnect_proxy = self.scene.addWidget(self.disconnect_button)
-        disconnect_proxy.setPos(260.0, 10.0)
+        disconnect_proxy.setPos(260.0, 40.0)
         self.disconnect_button.clicked.connect(self.disconnect_selected_blocks)  # type: ignore[arg-type]
 
     def _populate_palette(self) -> None:
         """Create palette blocks laid out horizontally."""
         x_cursor = 10.0
         y_cursor = 70.0
-        for definition in self.definitions:
+        ordered_definitions = sorted(self.definitions, key=lambda d: d.title)
+        for definition in ordered_definitions:
             palette_block = PaletteBlock(definition, self)
             self.scene.addItem(palette_block)
             palette_block.setPos(x_cursor, y_cursor)
             x_cursor += palette_block.rect().width() + 12.0
 
     def _bootstrap_demo_chain(self) -> None:
-        """Pre-place two blocks and connect them for the proof-of-concept."""
-        if len(self.definitions) < 2:
+        """Pre-place all blocks and connect them sequentially."""
+        if not self.definitions:
             return
 
-        lookup: Dict[str, BlockDefinition] = {
-            definition.identifier: definition for definition in self.definitions
-        }
+        ordered_defs = sorted(self.definitions, key=lambda d: d.title)
+        x_cursor = 220.0
+        y_position = 220.0
+        spacing = 200.0
+        previous_block: Optional[CanvasBlock] = None
 
-        first_def = None
-        second_def = None
-
-        preferred_ids = [
-            "ocr_stage1",
-            "ocr_app",
-            "stage1",
-            "stage1_ocr",
-        ]
-        preferred_second_ids = [
-            "cleanup_stage2",
-            "cleanup_ai",
-            "stage2",
-            "cleanup",
-        ]
-
-        for identifier in preferred_ids:
-            if identifier in lookup:
-                first_def = lookup[identifier]
-                break
-
-        for identifier in preferred_second_ids:
-            if identifier in lookup:
-                second_def = lookup[identifier]
-                break
-
-        if not first_def:
-            first_def = self.definitions[0]
-        if not second_def:
-            second_def = self.definitions[min(1, len(self.definitions) - 1)]
-
-        first_block = self.spawn_canvas_block(first_def)
-        second_block = self.spawn_canvas_block(second_def)
-        if not first_block or not second_block:
-            return
-
-        first_block.setPos(220.0, 220.0)
-        second_block.setPos(420.0, 220.0)
-        self.add_connection(first_block, second_block)
+        for definition in ordered_defs:
+            block = self.spawn_canvas_block(definition)
+            if not block:
+                continue
+            block.setPos(x_cursor, y_position)
+            if previous_block:
+                self.add_connection(previous_block, block)
+            previous_block = block
+            x_cursor += spacing
 
     # -----------------
     # Block management
@@ -691,6 +680,26 @@ class WorkflowEditor(QMainWindow):
         if connection.line_item.scene():
             self.scene.removeItem(connection.line_item)
 
+    def _resolve_edsuite_path(self) -> Optional[Path]:
+        """Resolve the edsuite path from the UI field."""
+        text = self.edsuite_path_edit.text().strip() if hasattr(self, "edsuite_path_edit") else ""
+        if not text:
+            text = "."
+        candidate = Path(text)
+        try:
+            if not candidate.is_absolute():
+                candidate = (self.base_dir / candidate).resolve()
+            else:
+                candidate = candidate.resolve()
+        except OSError as exc:
+            print(f"[workflow_editor] Invalid edsuite path '{text}': {exc}")
+            return None
+
+        if not candidate.is_dir():
+            print(f"[workflow_editor] edsuite path does not exist: {candidate}")
+            return None
+        return candidate
+
     # --------------------------
     # Connection / snap handling
     # --------------------------
@@ -796,11 +805,34 @@ class WorkflowEditor(QMainWindow):
             print("[workflow_editor] Nothing to execute.")
             return
 
-        print(f"[workflow_editor] Executing pipeline: {command_string}")
+        edsuite_root = self._resolve_edsuite_path()
+        if not edsuite_root:
+            return
+
+        env = os.environ.copy()
+        bin_dir = edsuite_root / ".venv"
+        if os.name == "nt":
+            bin_dir = bin_dir / "Scripts"
+        else:
+            bin_dir = bin_dir / "bin"
+        if bin_dir.exists():
+            existing_path = env.get("PATH", "")
+            env["PATH"] = f"{bin_dir}{os.pathsep}{existing_path}"
+        else:
+            print(f"[workflow_editor] Warning: expected virtualenv at {bin_dir} not found.")
+
+        print(f"[workflow_editor] Executing pipeline in {edsuite_root}: {command_string}")
         try:
-            subprocess.run(["python", "chained_app.py", command_string], check=False)
+            subprocess.run(
+                command_string,
+                shell=True,
+                cwd=str(edsuite_root),
+                env=env,
+                check=False,
+                executable="/bin/bash" if os.name != "nt" else None,
+            )
         except Exception as exc:  # noqa: BLE001 - log unexpected failures
-            print(f"[workflow_editor] Failed to launch chained_app.py: {exc}")
+            print(f"[workflow_editor] Failed to execute pipeline: {exc}")
 
     def keyPressEvent(self, event):
         """Handle global key events for the editor window."""

@@ -64,38 +64,20 @@ blocks:
         takes_value: true
       - key: material
         label: "Material"
-        long: --material
-        placeholder: "STRING or PATH"
-        default: ""
-        takes_value: true
-      - key: material-file
-        label: "Material file"
         long: --material-file
-        placeholder: "PATH"
+        placeholder: "STRING or PATH"
         default: ""
         takes_value: true
       - key: question
         label: "Question"
-        long: --question
-        placeholder: "STRING or PATH"
-        default: ""
-        takes_value: true
-      - key: question-file
-        label: "Question file"
         long: --question-file
-        placeholder: "PATH"
+        placeholder: "STRING or PATH"
         default: ""
         takes_value: true
       - key: context
         label: "Context"
         long: --context
         placeholder: "STRING or PATH"
-        default: ""
-        takes_value: true
-      - key: context-file
-        label: "Context file"
-        long: --context-file
-        placeholder: "PATH"
         default: ""
         takes_value: true
       - key: model

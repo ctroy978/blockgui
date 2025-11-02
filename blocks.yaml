@@ -1,0 +1,74 @@
+blocks:
+  - id: ocr_stage1
+    title: "Stage 1 – OCR"
+    command: "python batchocr/ocr_tests.py"
+    input: pdf
+    output: jsonl
+    color: blue
+    flags:
+      - key: input
+        label: "Input source"
+        long: --input
+        short: -i
+        placeholder: "PATH or -"
+        default: ""
+        takes_value: true
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
+        takes_value: true
+      - key: dpi
+        label: "Rasterization DPI"
+        long: --dpi
+        default: "220"
+        takes_value: true
+      - key: jpeg-quality
+        label: "JPEG quality"
+        long: --jpeg-quality
+        default: "70"
+        takes_value: true
+      - key: language-hints
+        label: "Language hints"
+        long: --language-hints
+        placeholder: "en,es"
+        default: ""
+        takes_value: true
+      - key: unknown-label
+        label: "Unknown label prefix"
+        long: --unknown-label
+        default: "Unknown Student"
+        takes_value: true
+  - id: cleanup_stage2
+    title: "Stage 2 – Cleanup"
+    command: "python cleanocr/cleanup_tests.py"
+    input: jsonl
+    output: jsonl
+    color: green
+    flags:
+      - key: input
+        label: "Input source"
+        long: --input
+        short: -i
+        placeholder: "PATH or -"
+        default: ""
+        takes_value: true
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
+        takes_value: true
+      - key: max-tokens
+        label: "Max tokens"
+        long: --max-tokens
+        default: "1200"
+        takes_value: true
+      - key: keep-original
+        label: "Keep original text"
+        long: --keep-original
+        takes_value: false
+        default: false

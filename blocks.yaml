@@ -41,6 +41,37 @@ blocks:
         long: --unknown-label
         default: "Unknown Student"
         takes_value: true
+  - id: cleanup_stage2
+    title: "Stage 2 – Cleanup"
+    command: "python cleanocr/cleanup_tests.py"
+    input: jsonl
+    output: jsonl
+    color: green
+    flags:
+      - key: input
+        label: "Input source"
+        long: --input
+        short: -i
+        placeholder: "PATH or -"
+        default: ""
+        takes_value: true
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
+        takes_value: true
+      - key: max-tokens
+        label: "Max tokens"
+        long: --max-tokens
+        default: "1200"
+        takes_value: true
+      - key: keep-original
+        label: "Keep original text"
+        long: --keep-original
+        takes_value: false
+        default: false
   - id: evaluation_stage3
     title: "Stage 3 – Evaluation"
     command: "python evaluate/evaluate_tests.py"
@@ -103,37 +134,6 @@ blocks:
       - key: usage-metadata
         label: "Include usage metadata"
         long: --usage-metadata
-        takes_value: false
-        default: false
-  - id: cleanup_stage2
-    title: "Stage 2 – Cleanup"
-    command: "python cleanocr/cleanup_tests.py"
-    input: jsonl
-    output: jsonl
-    color: green
-    flags:
-      - key: input
-        label: "Input source"
-        long: --input
-        short: -i
-        placeholder: "PATH or -"
-        default: ""
-        takes_value: true
-      - key: output
-        label: "Output path"
-        long: --output
-        short: -o
-        placeholder: "PATH (stdout by default)"
-        default: ""
-        takes_value: true
-      - key: max-tokens
-        label: "Max tokens"
-        long: --max-tokens
-        default: "1200"
-        takes_value: true
-      - key: keep-original
-        label: "Keep original text"
-        long: --keep-original
         takes_value: false
         default: false
   - id: reporting_stage4
@@ -222,8 +222,41 @@ blocks:
         placeholder: "PATH"
         default: ""
         takes_value: true
-  - id: smtp_send_stage6
-    title: "Stage 6 – SMTP Send"
+  - id: name_review_stage6
+    title: "Stage 6 – Name Review"
+    command: "python namecorrector/name_corrector.py"
+    input: jsonl
+    output: jsonl
+    color: purple
+    flags:
+      - key: input
+        label: "Input source"
+        long: --input
+        short: -i
+        placeholder: "PATH or -"
+        default: ""
+        takes_value: true
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
+        takes_value: true
+      - key: roster-file
+        label: "Roster file"
+        long: --roster-file
+        placeholder: "PATH"
+        default: ""
+        takes_value: true
+      - key: env-file
+        label: "Environment file"
+        long: --env-file
+        placeholder: "PATH"
+        default: ""
+        takes_value: true
+  - id: smtp_send_stage7
+    title: "Stage 7 – SMTP Send"
     command: "python mailroom/send_mail.py"
     input: jsonl
     output: jsonl

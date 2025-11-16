@@ -74,6 +74,7 @@ class BlockDefinition:
     input: str = "any"
     output: str = "any"
     color: str = "gray"
+    include_in_bootstrap: bool = True
     flags: List[BlockFlag] = field(default_factory=list)
 
 
@@ -172,6 +173,7 @@ def load_block_definitions(yaml_path: Path) -> List[BlockDefinition]:
                 title="Default Block",
                 command="echo 'default block'",
                 color="gray",
+                include_in_bootstrap=True,
             )
         ]
 
@@ -186,6 +188,7 @@ def load_block_definitions(yaml_path: Path) -> List[BlockDefinition]:
                 title="Default Block",
                 command="echo 'default block'",
                 color="gray",
+                include_in_bootstrap=True,
             )
         ]
 
@@ -207,6 +210,7 @@ def load_block_definitions(yaml_path: Path) -> List[BlockDefinition]:
         input_type = str(entry.get("input", "any"))
         output_type = str(entry.get("output", "any"))
         color = str(entry.get("color", "gray"))
+        include_in_bootstrap = bool(entry.get("include_in_bootstrap", True))
 
         flags: List[BlockFlag] = []
         raw_flags = entry.get("flags", [])
@@ -225,6 +229,7 @@ def load_block_definitions(yaml_path: Path) -> List[BlockDefinition]:
                 input=input_type,
                 output=output_type,
                 color=color,
+                include_in_bootstrap=include_in_bootstrap,
                 flags=flags,
             )
         )
@@ -239,6 +244,7 @@ def load_block_definitions(yaml_path: Path) -> List[BlockDefinition]:
             title="Default Block",
             command="echo 'default block'",
             color="gray",
+            include_in_bootstrap=True,
         )
     ]
 
@@ -543,7 +549,8 @@ class WorkflowEditor(QMainWindow):
         if not self.definitions:
             return
 
-        ordered_defs = sorted(self.definitions, key=lambda d: d.title)
+        bootstrapped_defs = [d for d in self.definitions if d.include_in_bootstrap]
+        ordered_defs = sorted(bootstrapped_defs, key=lambda d: d.title)
         x_cursor = 220.0
         y_position = 220.0
         spacing = 200.0

@@ -20,27 +20,6 @@ blocks:
         placeholder: "PATH (stdout by default)"
         default: ""
         takes_value: true
-      - key: dpi
-        label: "Rasterization DPI"
-        long: --dpi
-        default: "220"
-        takes_value: true
-      - key: jpeg-quality
-        label: "JPEG quality"
-        long: --jpeg-quality
-        default: "70"
-        takes_value: true
-      - key: language-hints
-        label: "Language hints"
-        long: --language-hints
-        placeholder: "en,es"
-        default: ""
-        takes_value: true
-      - key: unknown-label
-        label: "Unknown label prefix"
-        long: --unknown-label
-        default: "Unknown Student"
-        takes_value: true
   - id: cleanup_stage2
     title: "Stage 2 – Cleanup"
     command: "python cleanocr/cleanup_tests.py"
@@ -111,31 +90,40 @@ blocks:
         placeholder: "STRING or PATH"
         default: ""
         takes_value: true
-      - key: model
-        label: "Model"
-        long: --model
-        default: "grok-4-fast-reasoning"
+  - id: evaluation_essay_stage3
+    title: "Stage 3 – Evaluation (Essay)"
+    command: "python evaluate/evaluate_essay.py"
+    input: jsonl
+    output: jsonl
+    color: orange
+    include_in_bootstrap: false
+    flags:
+      - key: input-path
+        label: "Input path"
+        long: --input-path
+        short: -i
+        placeholder: "DIRECTORY or ZIP"
+        default: ""
         takes_value: true
-      - key: max-batch-tokens
-        label: "Max batch tokens"
-        long: --max-batch-tokens
-        default: "12000"
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
         takes_value: true
-      - key: max-batch-size
-        label: "Max batch size"
-        long: --max-batch-size
-        default: "5"
+      - key: rubric
+        label: "Rubric file"
+        long: --rubric-file
+        placeholder: "PATH"
+        default: ""
         takes_value: true
-      - key: timeout
-        label: "Timeout (seconds)"
-        long: --timeout
-        default: "180"
+      - key: pdf-report
+        label: "PDF report"
+        long: --pdf-report
+        placeholder: "PATH"
+        default: ""
         takes_value: true
-      - key: usage-metadata
-        label: "Include usage metadata"
-        long: --usage-metadata
-        takes_value: false
-        default: false
   - id: reporting_stage4
     title: "Stage 4 – Reporting"
     command: "python report/report_results.py"

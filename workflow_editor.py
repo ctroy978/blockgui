@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QLabel,
+    QMessageBox,
     QPushButton,
 )
 
@@ -533,10 +534,25 @@ class WorkflowEditor(QMainWindow):
         disconnect_proxy.setPos(260.0, 40.0)
         self.disconnect_button.clicked.connect(self.disconnect_selected_blocks)  # type: ignore[arg-type]
 
+        self.preview_checkbox = QCheckBox("Preview only (do not run)")
+        preview_proxy = self.scene.addWidget(self.preview_checkbox)
+        preview_proxy.setPos(420.0, 40.0)
+
+        command_label = QLabel("Last command:")
+        command_label_proxy = self.scene.addWidget(command_label)
+        command_label_proxy.setPos(10.0, 70.0)
+
+        self.command_display = QLineEdit()
+        self.command_display.setReadOnly(True)
+        self.command_display.setPlaceholderText("Built command will appear here")
+        self.command_display.setFixedWidth(720)
+        command_proxy = self.scene.addWidget(self.command_display)
+        command_proxy.setPos(110.0, 68.0)
+
     def _populate_palette(self) -> None:
         """Create palette blocks laid out horizontally."""
         x_cursor = 10.0
-        y_cursor = 70.0
+        y_cursor = 110.0
         ordered_definitions = sorted(self.definitions, key=lambda d: d.title)
         for definition in ordered_definitions:
             palette_block = PaletteBlock(definition, self)
@@ -707,6 +723,12 @@ class WorkflowEditor(QMainWindow):
             return None
         return candidate
 
+    def _update_last_command_display(self, command: str) -> None:
+        """Show the most recently built command in the UI."""
+        if hasattr(self, "command_display"):
+            self.command_display.setText(command)
+            self.command_display.setCursorPosition(0)
+
     # --------------------------
     # Connection / snap handling
     # --------------------------
@@ -812,8 +834,23 @@ class WorkflowEditor(QMainWindow):
             print("[workflow_editor] Nothing to execute.")
             return
 
+        self._update_last_command_display(command_string)
+
         edsuite_root = self._resolve_edsuite_path()
         if not edsuite_root:
+            return
+
+        if getattr(self, "preview_checkbox", None) and self.preview_checkbox.isChecked():
+            print(
+                "[workflow_editor] Preview mode enabled; command not executed. "
+                "Run the following in a terminal:\n"
+                f"{command_string}"
+            )
+            QMessageBox.information(
+                self,
+                "Preview mode",
+                f"Command built but not executed.\n\nRun this in a terminal:\n{command_string}",
+            )
             return
 
         env = os.environ.copy()

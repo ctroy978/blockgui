@@ -1,6 +1,6 @@
 blocks:
   - id: ocr_stage1
-    title: "Stage 1 – OCR"
+    title: "Stage 1 – Google OCR"
     command: "python batchocr/ocr_tests.py"
     input: pdf
     output: jsonl
@@ -23,7 +23,7 @@ blocks:
         default: ""
         takes_value: true
   - id: ocr_stage1
-    title: "Stage 1 – OPENOCR"
+    title: "Stage 1 – Qwen OCR"
     command: "python openocr/ocr_tests.py"
     input: pdf
     output: jsonl
@@ -75,11 +75,12 @@ blocks:
         takes_value: false
         default: false
   - id: evaluation_stage3
-    title: "Stage 3 – Evaluation"
+    title: "Stage 3 – Eval (summary text)"
     command: "python evaluate/evaluate_tests.py"
     input: jsonl
     output: jsonl
     color: orange
+    include_in_bootstrap: false
     flags:
       - key: input
         label: "Input source"
@@ -113,6 +114,50 @@ blocks:
         placeholder: "STRING or PATH"
         default: ""
         takes_value: true
+  - id: evaluation_fulltext_stage3
+    title: "Stage 3 – Eval (Full Text)"
+    command: "python evaluate/evaluate_fulltext.py"
+    input: jsonl
+    output: jsonl
+    color: orange
+    flags:
+      - key: input
+        label: "Input source"
+        long: --input
+        short: -i
+        placeholder: "PATH or -"
+        default: ""
+        takes_value: true
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
+        takes_value: true
+      - key: materials-path
+        label: "Materials path"
+        long: --materials-path
+        placeholder: "PATH or DIRECTORY"
+        default: ""
+        takes_value: true
+      - key: question
+        label: "Question"
+        long: --question-file
+        placeholder: "STRING or PATH"
+        default: ""
+        takes_value: true
+      - key: context
+        label: "Context"
+        long: --context
+        placeholder: "STRING or PATH"
+        default: ""
+        takes_value: true
+      - key: no-encrypted-content
+        label: "No encrypted content"
+        long: --no-encrypted-content
+        takes_value: false
+        default: false
   - id: evaluation_essay_stage3
     title: "Stage 3 – Evaluation (Essay)"
     command: "python evaluate/evaluate_essay.py"

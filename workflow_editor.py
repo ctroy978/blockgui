@@ -416,8 +416,11 @@ class CanvasBlock(QGraphicsRectItem):
 class PaletteBlock(QGraphicsRectItem):
     """Template block shown in the palette; dragging spawns a canvas block."""
 
+    WIDTH = 160.0
+    HEIGHT = 90.0
+
     def __init__(self, definition: BlockDefinition, editor: "WorkflowEditor"):
-        super().__init__(0.0, 0.0, CanvasBlock.BASE_WIDTH, 90.0)
+        super().__init__(0.0, 0.0, PaletteBlock.WIDTH, PaletteBlock.HEIGHT)
         self.definition = definition
         self.editor = editor
 
@@ -500,6 +503,7 @@ class WorkflowEditor(QMainWindow):
 
         self.canvas_blocks: List[CanvasBlock] = []
         self.connections: List[Connection] = []
+        self.palette_bottom: float = 0.0
 
         self._install_execute_button()
         self._populate_palette()
@@ -550,15 +554,44 @@ class WorkflowEditor(QMainWindow):
         command_proxy.setPos(110.0, 68.0)
 
     def _populate_palette(self) -> None:
-        """Create palette blocks laid out horizontally."""
-        x_cursor = 10.0
-        y_cursor = 110.0
+        """Create palette blocks arranged across multiple rows."""
         ordered_definitions = sorted(self.definitions, key=lambda d: d.title)
-        for definition in ordered_definitions:
+        if not ordered_definitions:
+            self.palette_bottom = 150.0
+            return
+
+        start_x = 10.0
+        start_y = 110.0
+        horizontal_gap = 12.0
+        vertical_gap = 18.0
+        block_width = PaletteBlock.WIDTH
+        block_height = PaletteBlock.HEIGHT
+
+        # Prefer two rows to avoid an overly wide palette, but fall back to
+        # additional rows if the window cannot accommodate that width.
+        desired_rows = 2 if len(ordered_definitions) > 3 else 1
+        available_width = max(320.0, self.width() - 40.0)
+        rows = max(1, desired_rows)
+        while rows < len(ordered_definitions):
+            per_row = math.ceil(len(ordered_definitions) / rows)
+            needed_width = per_row * block_width + (per_row - 1) * horizontal_gap
+            if needed_width <= available_width or rows == len(ordered_definitions):
+                break
+            rows += 1
+
+        per_row = math.ceil(len(ordered_definitions) / rows)
+        for index, definition in enumerate(ordered_definitions):
             palette_block = PaletteBlock(definition, self)
             self.scene.addItem(palette_block)
-            palette_block.setPos(x_cursor, y_cursor)
-            x_cursor += palette_block.rect().width() + 12.0
+            row = index // per_row
+            column = index % per_row
+            x_pos = start_x + column * (block_width + horizontal_gap)
+            y_pos = start_y + row * (block_height + vertical_gap)
+            palette_block.setPos(x_pos, y_pos)
+
+        row_count = math.ceil(len(ordered_definitions) / per_row)
+        last_row_index = max(0, row_count - 1)
+        self.palette_bottom = start_y + last_row_index * (block_height + vertical_gap) + block_height
 
     def _bootstrap_demo_chain(self) -> None:
         """Pre-place all blocks and connect them sequentially."""
@@ -568,7 +601,7 @@ class WorkflowEditor(QMainWindow):
         bootstrapped_defs = [d for d in self.definitions if d.include_in_bootstrap]
         ordered_defs = sorted(bootstrapped_defs, key=lambda d: d.title)
         x_cursor = 220.0
-        y_position = 220.0
+        y_position = max(self.palette_bottom + 80.0, 220.0)
         spacing = 200.0
         previous_block: Optional[CanvasBlock] = None
 

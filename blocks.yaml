@@ -5,6 +5,29 @@ blocks:
     input: pdf
     output: jsonl
     color: blue
+    include_in_bootstrap: false
+
+    flags:
+      - key: input
+        label: "Input source"
+        long: --input
+        short: -i
+        placeholder: "PATH or -"
+        default: ""
+        takes_value: true
+      - key: output
+        label: "Output path"
+        long: --output
+        short: -o
+        placeholder: "PATH (stdout by default)"
+        default: ""
+        takes_value: true
+  - id: ocr_stage1
+    title: "Stage 1 – OPENOCR"
+    command: "python openocr/ocr_tests.py"
+    input: pdf
+    output: jsonl
+    color: blue
     flags:
       - key: input
         label: "Input source"
